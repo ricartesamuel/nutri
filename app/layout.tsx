@@ -4,9 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Nutri",
   description: "Crie e edite tabelas nutricionais de forma rápida e intuitiva.",
-  generator: "v0.dev",
+  generator: "Nutri",
   icons: {
-    icon: "/nutri-icon.jpg",
+    icon: "/favicon-192.png",
   },
 };
 
