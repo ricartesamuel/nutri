@@ -30,7 +30,22 @@ import { GripVertical } from "lucide-react"
 
 type View = "home" | "editor"
 
-function SortableNutrientItem({ nutrient, updateNutrient, removeNutrient }) {
+interface Nutrient {
+  id: string
+  name: string
+  value: string
+  unit: string
+}
+
+function SortableNutrientItem({ 
+  nutrient, 
+  updateNutrient,
+  removeNutrient 
+}: {
+  nutrient: Nutrient
+  updateNutrient: (id: string, field: "name" | "value", value: string) => void
+  removeNutrient: (id: string) => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: nutrient.id })
 
   const style = {
