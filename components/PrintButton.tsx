@@ -1,34 +1,51 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Printer } from "lucide-react";
 
-export function PrintButton() {
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
-  const [selectedPrinter, setSelectedPrinter] = useState("")
-  const [labelQuantity, setLabelQuantity] = useState("1")
+export default function PrintButton() {
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedPrinter, setSelectedPrinter] = useState("");
+  const [labelQuantity, setLabelQuantity] = useState("1");
 
   const handlePrint = () => {
-    console.log("Printing with printer:", selectedPrinter)
-    console.log("Number of labels:", labelQuantity)
-    setIsPrintModalOpen(false)
-  }
+    console.log("Printing with printer:", selectedPrinter);
+    console.log("Number of labels:", labelQuantity);
+    setIsPrintModalOpen(false);
+  };
 
   return (
     <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-purple-500 hover:bg-purple-600 text-white">Imprimir</Button>
+        <Button className="bg-brand-secondary hover:bg-brand-secondary/90 text-white font-medium">
+          <Printer className="h-4 w-4 mr-2" />
+          Imprimir
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Configurações de Impressão</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <p>Tamanho da etiqueta: 10cm x 15cm</p>
+          <p>Tamanho da etiqueta: 60cm x 60cm</p>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="printer" className="text-right">
               Impressora
@@ -66,6 +83,5 @@ export function PrintButton() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

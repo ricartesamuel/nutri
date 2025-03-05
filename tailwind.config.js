@@ -51,13 +51,43 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Nutri specific colors
+        nutri: {
+          coral: "#e66b6e",
+          rose: "#b66578",
+          purple: "#6d597c",
+          peach: "#ebac8b",
+        },
+        brand: {
+          primary: "#b66578",
+          secondary: "#6d597c",
+          accent: "#ebac8b",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        "accordion-down": {
+          from: { height: 0 },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: 0 },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"],
+        nutrient: ["var(--font-inter)", "sans-serif"],
+      },
     },
   },
-  plugins: ["tailwindcss-animate"],
+  plugins: [require("tailwindcss-animate")],
 };
