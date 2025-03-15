@@ -122,7 +122,7 @@ export default function NutritionTablePreview({
         </div>
 
         <div className="relative mt-14">
-          {/* horizontal dimension* */}
+          {/* horizontal dimension */}
           <div className="absolute -top-10 left-0 right-0 flex justify-center items-center">
             <div className="relative w-full">
               <span className="absolute top-7 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg text-brand-primary/60 px-2 font-semibold">

@@ -54,7 +54,7 @@ export function ValueInput({
       setDisplayValue(inputValue);
       setIsValid(true);
 
-      // Update in real-time
+      // update in real-time
       updateItemValue(item.id, internalValue);
     } else {
       setIsValid(false);

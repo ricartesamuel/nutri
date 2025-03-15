@@ -69,7 +69,7 @@ export function NutrientTree({
     const rootItems: TreeItems<NutrientTreeItemData> = [];
     const childItems = new Set<string>();
 
-    // function to check if one nutrient is a child of another
+    // check if one nutrient is a child of another
     const isChildOf = (childName: string, parentName: string) => {
       const parentBaseName = parentName.split("(")[0].trim().toLowerCase();
       const childBaseName = childName.split("(")[0].trim().toLowerCase();
@@ -98,7 +98,6 @@ export function NutrientTree({
         return true;
       }
 
-      // Specific check for "Açúcares adicionados" as a child of "Açúcares totais"
       if (
         parentBaseName === "açúcares totais" &&
         (childBaseName === "açúcares adicionados" ||
@@ -266,7 +265,7 @@ export function NutrientTree({
             behavior: "smooth",
           });
         }
-      }, 100); // Small delay to ensure the DOM has updated
+      }, 100); // small delay to ensure the DOM update
     }
   };
 
@@ -305,7 +304,6 @@ export function NutrientTree({
     const flatNutrients = convertToFlatNutrients(updatedItems);
     setNutrients(flatNutrients);
 
-    // Scroll to the bottom to show the newly added item
     scrollToBottom();
   };
 
