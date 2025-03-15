@@ -82,6 +82,19 @@ export default function NutritionTablePreview({
     }
   };
 
+  // kj value
+  const formatEnergyValue = (nutrient: NutrientRow) => {
+    if (
+      nutrient.name.toLowerCase().includes("valor energético") &&
+      nutrient.unit === "kcal" &&
+      nutrient.kjValue &&
+      nutrient.value
+    ) {
+      return `${nutrient.value || "-"} (${nutrient.kjValue} kJ)`;
+    }
+    return nutrient.value || "-";
+  };
+
   return (
     <div className="flex-1 bg-transparent p-8 rounded-lg shadow-sm">
       <div className="max-w-2xl mx-auto">
@@ -109,7 +122,7 @@ export default function NutritionTablePreview({
         </div>
 
         <div className="relative mt-14">
-          {/* Horizontal dimension* */}
+          {/* horizontal dimension* */}
           <div className="absolute -top-10 left-0 right-0 flex justify-center items-center">
             <div className="relative w-full">
               <span className="absolute top-7 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg text-brand-primary/60 px-2 font-semibold">
@@ -118,7 +131,7 @@ export default function NutritionTablePreview({
             </div>
           </div>
 
-          <div className="bg-transparent p-4 border-none shadow-sm transform scale-100 origin-top">
+          <div className="bg-transparent p-4 border-none shadow-sm transform scale-90 origin-top">
             <Card className="border-2 rounded-none border-black nutrition-card">
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <div className="p-1 font-nutrient">
@@ -152,9 +165,11 @@ export default function NutritionTablePreview({
                       </thead>
                       <tbody>
                         {nutrients.map((nutrient, index) => {
-                          const indentLevel = getIndentationLevel(
-                            nutrient.name
-                          );
+                          // use the depth property from the nutrient if available, otherwise use getIndentationLevel
+                          const indentLevel =
+                            nutrient.depth !== undefined
+                              ? nutrient.depth
+                              : getIndentationLevel(nutrient.name);
 
                           const valuePerServing = nutrient.value
                             ? formatValue(
@@ -165,6 +180,8 @@ export default function NutritionTablePreview({
                                   100
                               )
                             : "-";
+
+                          const displayValue = formatEnergyValue(nutrient);
 
                           return (
                             <tr
@@ -183,7 +200,7 @@ export default function NutritionTablePreview({
                                 {nutrient.name}
                               </td>
                               <td className="text-center py-2 px-3 border-l border-black">
-                                {nutrient.value || "-"}
+                                {displayValue}
                               </td>
                               <td className="text-center py-2 px-3 border-l border-black">
                                 {valuePerServing}
@@ -274,8 +291,8 @@ export default function NutritionTablePreview({
               </Dialog>
             </Card>
           </div>
-          {/* Vertical Dimension */}
-          <div className="absolute -right-6 top-0 flex items-center">
+          {/* vertical dimension */}
+          <div className="absolute -right-12 top-0 flex items-center">
             <div className="nutrition-dimension-line relative">
               <span className="font-semibold fixed right-52 top-1/2 -translate-y-1/2 text-lg text-brand-primary/60 px-16 transform rotate-90 whitespace-nowrap">
                 60cm

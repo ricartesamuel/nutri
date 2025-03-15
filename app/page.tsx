@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import HomeView from "@/components/nutrition-table/HomeView";
-import NutritionTableEditor from "@/components/nutrition-table/TableEditor";
+import { NutrientTree } from "@/components/nutrition-table/NutrientTree";
 import NutritionTablePreview from "@/components/nutrition-table/TablePreview";
 import type { NutrientRow } from "@/components/types/nutrition.ts";
 
@@ -28,30 +28,6 @@ export default function NutritionTable() {
   const [columns, setColumns] = useState(3);
   const [width, setWidth] = useState(60);
   const [height, setHeight] = useState(60);
-
-  const addNutrient = () => {
-    const newNutrient = {
-      id: Date.now().toString(),
-      name: "",
-      value: "",
-      unit: "",
-    };
-    setNutrients([...nutrients, newNutrient]);
-  };
-
-  const removeNutrient = (id: string) => {
-    setNutrients(nutrients.filter((n) => n.id !== id));
-  };
-
-  const updateNutrient = (
-    id: string,
-    field: keyof NutrientRow,
-    value: string
-  ) => {
-    setNutrients(
-      nutrients.map((n) => (n.id === id ? { ...n, [field]: value } : n))
-    );
-  };
 
   const handleGoBack = () => {
     setCurrentView("home");
@@ -82,19 +58,16 @@ export default function NutritionTable() {
         ) : (
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="max-h-[800px] overflow-y-auto">
-              <NutritionTableEditor
+              <NutrientTree
+                nutrients={nutrients}
+                setNutrients={setNutrients}
                 productName={productName}
                 setProductName={setProductName}
                 servings={servings}
                 setServings={setServings}
                 servingSize={servingSize}
                 setServingSize={setServingSize}
-                nutrients={nutrients}
-                updateNutrient={updateNutrient}
-                removeNutrient={removeNutrient}
-                addNutrient={addNutrient}
                 handleGoBack={handleGoBack}
-                setNutrients={setNutrients}
               />
             </div>
 

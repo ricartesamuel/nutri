@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-// Initialize the Inter font with the weights we need
+// inter font
 const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -31,3 +31,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+import "./globals.css";

@@ -31,19 +31,13 @@ export const getParentNutrient = (nutrientName: string): string | null => {
 };
 
 export const getIndentationLevel = (nutrientName: string): number => {
-  // Nível 0 = sem indentação
-  // Nível 1 = primeira indentação
-  // Nível 2 = segunda indentação (mais profunda)
-
-  // Verifica se é um subnutriente
+  // subnutrient
   const parent = getParentNutrient(nutrientName);
   if (!parent) return 0;
 
-  // Verifica se o pai também é um subnutriente (para indentação de nível 2)
   const grandparent = getParentNutrient(parent);
   if (grandparent) return 2;
 
-  // Caso contrário, é uma indentação de nível 1
   return 1;
 };
 
@@ -52,7 +46,10 @@ export const calculateEnergyKJ = (
   proteins: number,
   fats: number
 ) => {
-  return carbs * 17 + proteins * 17 + fats * 37;
+  // carboidratos: 1g = 4 kcal = 16,8 kJ
+  // proteínas: 1g = 4 kcal = 16,8 kJ
+  // gorduras: 1g = 9 kcal = 37,8 kJ
+  return carbs * 16.8 + proteins * 16.8 + fats * 37.8;
 };
 
 export const calculateVD = (
@@ -82,12 +79,9 @@ export const formatValue = (value: number) => {
   if (value === 0) {
     return "0";
   } else if (value < 10) {
-    // Para valores menores que 10, arredondamos para uma casa decimal
-    // usando o método de arredondamento bancário
     const rounded = Math.round(value * 10) / 10;
     return rounded.toFixed(1).replace(".", ",");
   } else {
-    // Para valores maiores ou iguais a 10, arredondamos para o inteiro mais próximo
     return Math.round(value).toString();
   }
 };

@@ -3,6 +3,8 @@ export interface Nutrient {
   name: string;
   value: string;
   unit: string;
+  depth?: number;
+  kjValue?: string;
 }
 
 export type NutrientRow = Nutrient;
