@@ -8,7 +8,7 @@ import {
 } from "dnd-kit-sortable-tree";
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, ChevronDown } from "lucide-react";
 import type { NutrientRow } from "@/components/types/nutrition";
 import { calculateEnergyKJ } from "@/components/utils/nutrition-calculation";
 import { DeleteNutrientDialog } from "./DeleteNutrientDialog";
@@ -17,12 +17,40 @@ import { ServingInputs } from "./ServingInputs";
 import { AddNutrientInput } from "./AddNutrientInput";
 import { ValueInput } from "./ValueInput";
 
+// Add custom styles for the drag handle and collapse icons
+const treeItemStyles = `
+  .dnd-sortable-tree-handle {
+    opacity: 0.6 !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 8px !important;
+    cursor: grab !important;
+  }
+  
+  .dnd-sortable-tree-handle:hover {
+    opacity: 1 !important;
+  }
+  
+  .dnd-sortable-tree-collapse-button {
+    opacity: 0.6 !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 4px !important;
+  }
+  
+  .dnd-sortable-tree-collapse-button:hover {
+    opacity: 1 !important;
+  }
+`;
+
 type NutrientTreeItemData = {
   id: string;
   name: string;
   value: string;
   unit: string;
   kjValue?: string;
+  collapsed?: boolean;
+  parentId?: string;
 };
 
 interface NutrientTreeProps {
@@ -35,10 +63,11 @@ interface NutrientTreeProps {
   servingSize: string;
   setServingSize: (size: string) => void;
   handleGoBack: () => void;
+  hideHeader?: boolean;
 }
 
 export function NutrientTree({
-  nutrients,
+  nutrients: initialNutrients,
   setNutrients,
   productName,
   setProductName,
@@ -47,6 +76,7 @@ export function NutrientTree({
   servingSize,
   setServingSize,
   handleGoBack,
+  hideHeader = false,
 }: NutrientTreeProps) {
   // convert flat nutrients to tree structure
   const convertToTreeItems = (
@@ -62,14 +92,31 @@ export function NutrientTree({
         value: nutrient.value,
         unit: nutrient.unit,
         kjValue: nutrient.kjValue,
+        collapsed:
+          nutrient.collapsed !== undefined ? nutrient.collapsed : false,
+        parentId: nutrient.parentId,
       });
     });
 
-    // determine parent-child relationships based on naming conventions
+    // Second pass: establish parent-child relationships
     const rootItems: TreeItems<NutrientTreeItemData> = [];
     const childItems = new Set<string>();
 
-    // check if one nutrient is a child of another
+    // First handle explicit parent-child relationships using parentId
+    flatNutrients.forEach((nutrient) => {
+      if (nutrient.parentId) {
+        const parentItem = itemMap.get(nutrient.parentId);
+        if (parentItem) {
+          if (!parentItem.children) {
+            parentItem.children = [];
+          }
+          parentItem.children.push(itemMap.get(nutrient.id)!);
+          childItems.add(nutrient.id);
+        }
+      }
+    });
+
+    // Then handle implicit relationships based on naming conventions
     const isChildOf = (childName: string, parentName: string) => {
       const parentBaseName = parentName.split("(")[0].trim().toLowerCase();
       const childBaseName = childName.split("(")[0].trim().toLowerCase();
@@ -109,13 +156,20 @@ export function NutrientTree({
       return false;
     };
 
-    // tree structure
+    // Add remaining items that don't have explicit parentId but might have implicit relationships
     flatNutrients.forEach((nutrient) => {
+      // Skip if already processed as a child
+      if (childItems.has(nutrient.id) || nutrient.parentId) {
+        return;
+      }
+
       let foundParent = false;
 
+      // Check for implicit parent-child relationships
       for (const potentialParent of flatNutrients) {
         if (
           nutrient.id !== potentialParent.id &&
+          !childItems.has(potentialParent.id) &&
           isChildOf(nutrient.name, potentialParent.name)
         ) {
           const parentItem = itemMap.get(potentialParent.id);
@@ -131,6 +185,7 @@ export function NutrientTree({
         }
       }
 
+      // If no parent found, add to root items
       if (!foundParent && !childItems.has(nutrient.id)) {
         rootItems.push(itemMap.get(nutrient.id)!);
       }
@@ -147,7 +202,8 @@ export function NutrientTree({
 
     const processItem = (
       item: TreeItems<NutrientTreeItemData>[0],
-      depth = 0
+      depth = 0,
+      parentId?: string
     ) => {
       flatNutrients.push({
         id: item.id,
@@ -156,10 +212,14 @@ export function NutrientTree({
         unit: item.unit,
         depth: depth, // add depth information
         kjValue: item.kjValue, // kj value
+        collapsed: item.collapsed, // preserve collapsed state
+        parentId: parentId, // preserve parent-child relationship
       });
 
       if (item.children && item.children.length > 0) {
-        item.children.forEach((child) => processItem(child, depth + 1));
+        item.children.forEach((child) =>
+          processItem(child, depth + 1, item.id)
+        );
       }
     };
 
@@ -167,8 +227,10 @@ export function NutrientTree({
     return flatNutrients;
   };
 
+  const [localNutrients, setLocalNutrients] =
+    useState<NutrientRow[]>(initialNutrients);
   const [items, setItems] = useState<TreeItems<NutrientTreeItemData>>(
-    convertToTreeItems(nutrients)
+    convertToTreeItems(localNutrients)
   );
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemName, setEditingItemName] = useState("");
@@ -178,9 +240,10 @@ export function NutrientTree({
     hasChildren: boolean;
   } | null>(null);
   const [activeValueId, setActiveValueId] = useState<string | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   // ref to track if the update is coming from internal or parent state changes
   const isInternalUpdate = useRef(false);
@@ -188,10 +251,33 @@ export function NutrientTree({
   // update tree items
   useEffect(() => {
     if (!isInternalUpdate.current) {
-      setItems(convertToTreeItems(nutrients));
+      setItems(convertToTreeItems(localNutrients));
     }
     isInternalUpdate.current = false;
-  }, [nutrients]);
+  }, [localNutrients]);
+
+  const checkScrollPosition = () => {
+    if (formContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        formContainerRef.current;
+      setShowScrollToBottom(scrollTop + clientHeight < scrollHeight - 20);
+    }
+  };
+
+  // scroll event listener
+  useEffect(() => {
+    const container = formContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollPosition);
+      checkScrollPosition();
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", checkScrollPosition);
+      }
+    };
+  }, []);
 
   // update nutrients when tree changes internally
   const handleItemsChanged = (newItems: TreeItems<NutrientTreeItemData>) => {
@@ -200,7 +286,11 @@ export function NutrientTree({
     isInternalUpdate.current = true;
 
     const flatNutrients = convertToFlatNutrients(newItems);
+    setLocalNutrients(flatNutrients);
     setNutrients(flatNutrients);
+
+    // check scroll position after items change
+    setTimeout(checkScrollPosition, 100);
   };
 
   useEffect(() => {
@@ -250,6 +340,7 @@ export function NutrientTree({
 
           isInternalUpdate.current = true;
           const flatNutrients = convertToFlatNutrients(updatedItems);
+          setLocalNutrients(flatNutrients);
           setNutrients(flatNutrients);
         }
       }
@@ -257,11 +348,11 @@ export function NutrientTree({
   }, [items.map((item) => item.value).join(",")]); // avoid loops
 
   const scrollToBottom = () => {
-    if (treeContainerRef.current) {
+    if (formContainerRef.current) {
       setTimeout(() => {
-        if (treeContainerRef.current) {
-          treeContainerRef.current.scrollTo({
-            top: treeContainerRef.current.scrollHeight,
+        if (formContainerRef.current) {
+          formContainerRef.current.scrollTo({
+            top: formContainerRef.current.scrollHeight,
             behavior: "smooth",
           });
         }
@@ -293,6 +384,7 @@ export function NutrientTree({
       name: newItemName.trim(),
       value: "",
       unit: unit,
+      collapsed: true, // Default to collapsed
     };
 
     // add new element
@@ -302,6 +394,7 @@ export function NutrientTree({
     // update parent state
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
+    setLocalNutrients(flatNutrients);
     setNutrients(flatNutrients);
 
     scrollToBottom();
@@ -352,6 +445,7 @@ export function NutrientTree({
 
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
+    setLocalNutrients(flatNutrients);
     setNutrients(flatNutrients);
   };
 
@@ -379,6 +473,7 @@ export function NutrientTree({
 
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
+    setLocalNutrients(flatNutrients);
     setNutrients(flatNutrients);
   };
 
@@ -429,7 +524,38 @@ export function NutrientTree({
 
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
+    setLocalNutrients(flatNutrients);
     setNutrients(flatNutrients);
+
+    // check scroll position after deletion
+    setTimeout(checkScrollPosition, 100);
+  };
+
+  const toggleCollapsed = (id: string) => {
+    const updateCollapsed = (
+      items: TreeItems<NutrientTreeItemData>
+    ): TreeItems<NutrientTreeItemData> => {
+      return items.map((item) => {
+        if (item.id === id) {
+          return { ...item, collapsed: !item.collapsed };
+        }
+        if (item.children?.length) {
+          return { ...item, children: updateCollapsed(item.children) };
+        }
+        return item;
+      });
+    };
+
+    const updatedItems = updateCollapsed(items);
+    setItems(updatedItems);
+
+    isInternalUpdate.current = true;
+    const flatNutrients = convertToFlatNutrients(updatedItems);
+    setLocalNutrients(flatNutrients);
+    setNutrients(flatNutrients);
+
+    // check scroll position after toggle collapse
+    setTimeout(checkScrollPosition, 100);
   };
 
   // tree items
@@ -441,8 +567,15 @@ export function NutrientTree({
     const isEditing = editingItemId === item.id;
 
     return (
-      <SimpleTreeItemWrapper {...props} ref={ref}>
-        <div className="py-1 group my-1 px-2">
+      <SimpleTreeItemWrapper
+        {...props}
+        ref={ref}
+        collapsed={item.collapsed}
+        className="hover:bg-primary/5 rounded-sm"
+        childrenClassName="pl-6"
+        showDragHandle={true}
+      >
+        <div className="py-1 group my-1 px-1">
           {isEditing ? (
             <div className="flex-1 flex items-center">
               <input
@@ -454,13 +587,13 @@ export function NutrientTree({
                   if (e.key === "Escape") cancelEditing();
                 }}
                 onBlur={saveEditing}
-                className="h-10 border-primary/20 focus-visible:ring-primary/20 w-full rounded-md border px-3 py-2 text-sm"
+                className="h-8 border-primary/20 focus-visible:ring-primary/20 w-full rounded-md border px-2 py-1 text-sm"
                 autoFocus
               />
             </div>
           ) : (
-            <div className="grid grid-cols-[1fr,auto,auto] items-center w-full gap-2">
-              <div className="mr-2 truncate">{item.name}</div>
+            <div className="flex items-center w-full gap-1">
+              <div className="flex-1 truncate text-sm">{item.name}</div>
               <div className="flex items-center justify-end">
                 <ValueInput
                   item={item}
@@ -482,24 +615,24 @@ export function NutrientTree({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10"
+                  className="h-6 w-6 flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10"
                   onClick={(e) => {
                     e.stopPropagation();
                     startEditing(item.id, item.name);
                   }}
                 >
-                  <Edit className="h-3.5 w-3.5" />
+                  <Edit className="h-3 w-3" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-primary/40 flex-shrink-0 hover:bg-primary/10 hover:text-primary"
+                  className="h-6 w-6 text-primary/40 flex-shrink-0 hover:bg-primary/10 hover:text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     openDeleteDialog(item.id);
                   }}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             </div>
@@ -510,39 +643,59 @@ export function NutrientTree({
   });
 
   return (
-    <div className="max-w-xl h-full border-primary/20 border-2 rounded-sm">
-      <div className="p-6 bg-white shadow-sm border border-primary/10 h-full flex flex-col">
-        <div className="space-y-6 font-nutrient flex-1 flex flex-col">
+    <div
+      ref={formContainerRef}
+      className="h-full p-2 bg-white overflow-y-auto overflow-x-hidden"
+    >
+      <style jsx global>
+        {treeItemStyles}
+      </style>
+      <div className="space-y-3 font-nutrient">
+        {!hideHeader && (
           <NutrientHeader
             productName={productName}
             setProductName={setProductName}
             handleGoBack={handleGoBack}
           />
+        )}
 
-          <ServingInputs
-            servings={servings}
-            setServings={setServings}
-            servingSize={servingSize}
-            setServingSize={setServingSize}
-          />
+        <ServingInputs
+          servings={servings}
+          setServings={setServings}
+          servingSize={servingSize}
+          setServingSize={setServingSize}
+        />
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth border-primary/20 border rounded-sm p-4">
-            <AddNutrientInput onAddItem={handleAddItem} />
+        <div className="border-primary/20 border rounded-sm p-2 relative">
+          <AddNutrientInput onAddItem={handleAddItem} />
 
-            <div
-              ref={treeContainerRef}
-              className="max-h-[350px] overflow-y-auto overflow-x-hidden pr-2 scroll-smooth"
-            >
-              <SortableTree
-                items={items}
-                onItemsChanged={handleItemsChanged}
-                TreeItemComponent={NutrientTreeItem}
-                indentationWidth={24}
-              />
-            </div>
+          <div className="pr-1">
+            <SortableTree
+              items={items}
+              onItemsChanged={handleItemsChanged}
+              TreeItemComponent={NutrientTreeItem}
+              indentationWidth={28}
+            />
           </div>
         </div>
       </div>
+
+      {showScrollToBottom && (
+        <button
+          className="fixed bottom-3 right-3 bg-primary text-white rounded-full p-2 shadow-md hover:bg-primary/90 transition-opacity z-10"
+          onClick={() => {
+            if (formContainerRef.current) {
+              formContainerRef.current.scrollTo({
+                top: formContainerRef.current.scrollHeight,
+                behavior: "smooth",
+              });
+            }
+          }}
+          aria-label="Rolar para o final da lista"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      )}
 
       <DeleteNutrientDialog
         open={deleteDialogOpen}

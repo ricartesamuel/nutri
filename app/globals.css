@@ -97,12 +97,10 @@
   }
 }
 
-/* Gradient background for the app */
 .nutri-gradient-bg {
   background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
 }
 
-/* Nutri logo gradient */
 .nutri-brand-gradient {
   background: linear-gradient(
     135deg,
@@ -113,7 +111,7 @@
   );
 }
 
-/* Dimension line for the nutrition table */
+/* dimension line for the nutrition table */
 .nutrition-dimension-line {
   height: 75%;
   position: absolute;
@@ -121,21 +119,39 @@
   top: 0;
 }
 
+.fixed-position {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* add a new class for the table container */
+.table-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 /* scroll */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: hsl(var(--muted) / 0.8);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.9);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--secondary));
+  background: hsl(var(--secondary) / 0.9);
 }

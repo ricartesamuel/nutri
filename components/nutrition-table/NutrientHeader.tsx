@@ -19,16 +19,16 @@ export function NutrientHeader({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   return (
-    <div>
+    <div className="mb-2">
       <Button
         variant="ghost"
         onClick={handleGoBack}
-        className="text-primary/60 hover:text-primary hover:bg-primary/5 text-base"
+        className="text-primary/60 hover:text-primary hover:bg-primary/5 text-sm h-7 px-2"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        <ArrowLeft className="h-3.5 w-3.5 mr-1" />
         Voltar
       </Button>
-      <div className="flex items-center justify-center gap-3 mb-4">
+      <div className="flex items-center justify-center gap-2 mb-2">
         {isEditingTitle ? (
           <Input
             value={productName}
@@ -40,10 +40,10 @@ export function NutrientHeader({
               }
             }}
             autoFocus
-            className="text-center text-3xl font-semibold border-primary/20 focus-visible:ring-primary/20 max-w-xs"
+            className="text-center text-xl font-semibold border-primary/20 focus-visible:ring-primary/20 max-w-xs h-9"
           />
         ) : (
-          <h1 className="text-3xl font-semibold text-center text-primary">
+          <h1 className="text-xl font-semibold text-center text-primary">
             {productName}
           </h1>
         )}
@@ -51,12 +51,12 @@ export function NutrientHeader({
           variant="ghost"
           size="icon"
           onClick={() => setIsEditingTitle(true)}
-          className="h-8 w-8 text-primary/40 hover:text-primary hover:bg-primary/10"
+          className="h-7 w-7 text-primary/40 hover:text-primary hover:bg-primary/10"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <div className="h-px bg-primary/10 my-4" />
+      <div className="h-px bg-primary/10 my-2" />
     </div>
   );
 }

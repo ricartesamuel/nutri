@@ -33,24 +33,30 @@ export function ServingInputs({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="relative w-3/5">
+    <div className="space-y-2">
+      <div className="relative w-1/2">
+        <label className="text-xs text-muted-foreground mb-1 block">
+          Porções por embalagem
+        </label>
         <Input
           value={servings}
           onChange={(e) => setServings(e.target.value)}
           onKeyDown={handleServingSizeKeyDown}
-          placeholder="Porções por embalagem: 000 porções"
-          className="pl-4 pr-8 py-2 w-full border-primary/20 rounded-lg focus-visible:ring-primary/20"
+          placeholder="000 porções"
+          className="pl-3 pr-8 py-1 h-7 text-sm w-full border-primary/20 rounded-lg focus-visible:ring-primary/20"
         />
       </div>
 
-      <div className="relative w-3/5">
+      <div className="relative w-1/2">
+        <label className="text-xs text-muted-foreground mb-1 block">
+          Porção
+        </label>
         <Input
           value={servingSize}
           onChange={handleServingSizeChange}
           onKeyDown={handleServingSizeKeyDown}
-          placeholder="Porção: 000g"
-          className="pl-4 pr-8 py-2 w-full border-primary/20 rounded-lg focus-visible:ring-primary/20"
+          placeholder="000g"
+          className="pl-3 pr-8 py-1 h-7 text-sm w-full border-primary/20 rounded-lg focus-visible:ring-primary/20"
           maxLength={4}
         />
       </div>

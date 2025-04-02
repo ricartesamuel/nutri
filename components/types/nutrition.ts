@@ -5,6 +5,8 @@ export interface Nutrient {
   unit: string;
   depth?: number;
   kjValue?: string;
+  collapsed?: boolean;
+  parentId?: string;
 }
 
 export type NutrientRow = Nutrient;

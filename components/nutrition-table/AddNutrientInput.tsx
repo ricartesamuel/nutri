@@ -27,21 +27,22 @@ export function AddNutrientInput({ onAddItem }: AddNutrientInputProps) {
   };
 
   return (
-    <div className="mb-4">
-      <div className="flex space-x-2">
+    <div className="mb-2">
+      <div className="flex space-x-1">
         <Input
           placeholder="Digite o nome do nutriente"
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="border-primary/20 focus-visible:ring-primary/20"
+          className="h-7 text-sm border-primary/20 focus-visible:ring-primary/20"
         />
         <Button
           onClick={handleAddItem}
-          className="bg-primary hover:bg-primary/90 text-white"
+          className="h-7 px-2 bg-primary hover:bg-primary/90 text-white"
+          size="sm"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          <span className="text-xs">Adicionar</span>
         </Button>
       </div>
     </div>

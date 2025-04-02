@@ -86,7 +86,7 @@ export function ValueInput({
   };
 
   return (
-    <div className="relative w-28" onClick={(e) => e.stopPropagation()}>
+    <div className="relative w-24" onClick={(e) => e.stopPropagation()}>
       <Input
         ref={valueInputRef}
         type="text"
@@ -97,13 +97,13 @@ export function ValueInput({
         onClick={handleValueClick}
         onFocus={() => setActive(true)}
         onKeyDown={handleKeyDown}
-        className={`h-8 w-full pl-3 pr-10 border-primary/20 focus-visible:ring-primary/20 ${
+        className={`h-7 w-full pl-2 pr-8 text-sm border-primary/20 focus-visible:ring-primary/20 ${
           isValid ? "" : "border-red-500"
         }`}
         inputMode="decimal"
         maxLength={5}
       />
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-primary/60 pointer-events-none">
+      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-primary/60 pointer-events-none">
         {item.unit}
       </span>
     </div>

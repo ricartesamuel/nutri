@@ -1,14 +1,18 @@
 import type { NutrientRow } from "@/components/types/nutrition";
 
+// Update the dailyValues object to ensure it matches the nutrient names exactly
+
 export const dailyValues = {
-  "Valor energético(kcal)": 2000,
-  "Carboidratos(g)": 300,
-  "Açúcares adicionados(g)": 50,
-  "Proteínas(g)": 50,
-  "Gorduras totais(g)": 65,
-  "Gorduras saturadas(g)": 20,
-  "Fibras alimentares(g)": 25,
-  "Sódio(mg)": 2000,
+  "Valor energético (kcal)": 2000,
+  "Carboidratos (g)": 300,
+  "Açúcares totais (g)": 50,
+  "Açúcares adicionados (g)": 50,
+  "Proteínas (g)": 50,
+  "Gorduras totais (g)": 65,
+  "Gorduras saturadas (g)": 20,
+  "Gorduras trans (g)": 0,
+  "Fibras alimentares (g)": 25,
+  "Sódio (mg)": 2000,
 };
 
 export const nutrientRelations = {
@@ -31,14 +35,39 @@ export const getParentNutrient = (nutrientName: string): string | null => {
 };
 
 export const getIndentationLevel = (nutrientName: string): number => {
-  // subnutrient
-  const parent = getParentNutrient(nutrientName);
-  if (!parent) return 0;
+  // Normalize the nutrient name for comparison
+  const normalizedName = nutrientName.toLowerCase().trim();
 
-  const grandparent = getParentNutrient(parent);
-  if (grandparent) return 2;
+  // Check if it's a direct child of Carboidratos
+  if (normalizedName.includes("carboidrato")) {
+    return 0;
+  }
 
-  return 1;
+  // Check if it's Açúcares totais
+  if (normalizedName.includes("açúcares totais")) {
+    return 1;
+  }
+
+  // Check if it's Açúcares adicionados (child of Açúcares totais)
+  if (normalizedName.includes("açúcares adicionados")) {
+    return 2;
+  }
+
+  // Check if it's Gorduras totais
+  if (normalizedName.includes("gorduras totais")) {
+    return 0;
+  }
+
+  // Check if it's a child of Gorduras totais
+  if (
+    normalizedName.includes("gordura") &&
+    !normalizedName.includes("totais")
+  ) {
+    return 1;
+  }
+
+  // Default case - no indentation
+  return 0;
 };
 
 export const calculateEnergyKJ = (
@@ -58,21 +87,37 @@ export const calculateVD = (
   servingSize: string,
   nutrients: NutrientRow[]
 ) => {
-  if (nutrientName === "Açúcares totais(g)") return "-";
+  // Clean up the nutrient name to match the keys in dailyValues
+  const cleanName =
+    nutrientName.split("(")[0].trim() + " (" + nutrientName.split("(")[1];
 
-  const dailyValue = dailyValues[nutrientName as keyof typeof dailyValues];
-  if (!dailyValue || !value || !servingSize) return "-";
+  // Skip calculation for certain nutrients
+  if (
+    cleanName === "Açúcares totais (g)" ||
+    cleanName === "Gorduras trans (g)" ||
+    !value ||
+    value === "-" ||
+    !servingSize
+  )
+    return "-";
 
+  // Get the daily value for this nutrient
+  const dailyValue = dailyValues[cleanName as keyof typeof dailyValues];
+  if (!dailyValue) return "-";
+
+  // Parse the numeric values
   const numericValue = Number.parseFloat(value.replace(",", "."));
   const numericServingSize = Number.parseFloat(servingSize.replace(",", "."));
 
   if (isNaN(numericValue) || isNaN(numericServingSize)) return "-";
 
+  // Calculate the value per serving and the percentage of daily value
   const valuePerServing = (numericValue * numericServingSize) / 100;
   const vd = (valuePerServing / dailyValue) * 100;
 
+  // Round and format the result
   const roundedVD = Math.round(vd);
-  return `${roundedVD}%`;
+  return isNaN(roundedVD) ? "-" : `${roundedVD}%`;
 };
 
 export const formatValue = (value: number) => {
