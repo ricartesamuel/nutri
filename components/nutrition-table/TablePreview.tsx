@@ -83,7 +83,7 @@ export default function NutritionTablePreview({
     // timeout to hide dimensions
     hideTimeoutRef.current = setTimeout(() => {
       setShowDimensions(false);
-    }, 300);
+    }, 100);
   };
 
   useEffect(() => {

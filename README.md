@@ -19,7 +19,7 @@
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/ricartesamuel/nutri.git
+   git clone https://github.com/ricartesamul/nutri.git
    ```
 
 📄 Licença
