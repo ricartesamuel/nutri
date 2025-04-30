@@ -21,12 +21,13 @@ export function NutrientHeader({
   return (
     <div className="mb-2">
       <Button
-        variant="ghost"
+        variant="outline"
         onClick={handleGoBack}
-        className="text-primary/60 hover:text-primary hover:bg-primary/5 text-sm h-7 px-2"
+        className="text-primary hover:text-primary hover:bg-primary/5 text-sm h-7 px-2 border-primary/30"
+        title="Fechar editor"
       >
-        <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-        Voltar
+        <ArrowLeft className="h-5 w-5 md:h-4 md:w-4" />
+        <span className="md:inline hidden">Voltar</span>
       </Button>
       <div className="flex items-center justify-center gap-2 mb-2">
         {isEditingTitle ? (

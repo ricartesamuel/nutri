@@ -8,7 +8,7 @@ import {
 } from "dnd-kit-sortable-tree";
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ChevronDown } from "lucide-react";
+import { Edit, Trash2, ChevronDown, Check } from "lucide-react";
 import type { NutrientRow } from "@/components/types/nutrition";
 import { calculateEnergyKJ } from "@/components/utils/nutrition-calculation";
 import { DeleteNutrientDialog } from "./DeleteNutrientDialog";
@@ -243,7 +243,7 @@ export function NutrientTree({
   } | null>(null);
   const [activeValueId, setActiveValueId] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -406,13 +406,13 @@ export function NutrientTree({
   const startEditing = (id: string, name: string) => {
     setEditingItemId(id);
     setEditingItemName(name);
-    setIsEditing(true);
+    setIsEditing(id);
   };
 
   const saveEditing = () => {
     if (!editingItemId || !editingItemName.trim()) {
       setEditingItemId(null);
-      setIsEditing(false);
+      setIsEditing(null);
       return;
     }
 
@@ -447,7 +447,7 @@ export function NutrientTree({
     const updatedItems = updateItemName(items);
     setItems(updatedItems);
     setEditingItemId(null);
-    setIsEditing(false);
+    setIsEditing(null);
 
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
@@ -457,7 +457,7 @@ export function NutrientTree({
 
   const cancelEditing = () => {
     setEditingItemId(null);
-    setIsEditing(false);
+    setIsEditing(null);
   };
 
   const updateItemValue = (id: string, value: string) => {
@@ -587,7 +587,7 @@ export function NutrientTree({
             isMobileOrTabletView ? "my-0.5" : "my-1"
           } px-1`}
         >
-          {isEditing ? (
+          {isEditing === item.id ? (
             <div className="flex-1 flex items-center">
               <input
                 ref={inputRef}
@@ -608,7 +608,7 @@ export function NutrientTree({
               <div
                 className={`flex-1 truncate ${
                   isMobileOrTabletView ? "text-xs" : "text-sm"
-                } max-w-[180px]`}
+                } max-w-[150px] md:max-w-[180px]`}
               >
                 {item.name}
               </div>
@@ -628,26 +628,46 @@ export function NutrientTree({
                 />
               </div>
               <div
-                className="flex items-center gap-1 justify-end"
+                className="flex items-center gap-1 justify-end shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`${
-                    isMobileOrTabletView ? "h-5 w-5" : "h-6 w-6"
-                  } flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startEditing(item.id, item.name);
-                  }}
-                >
-                  <Edit
+                {isEditing === item.id ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className={`${
-                      isMobileOrTabletView ? "h-2.5 w-2.5" : "h-3 w-3"
-                    }`}
-                  />
-                </Button>
+                      isMobileOrTabletView ? "h-5 w-5" : "h-6 w-6"
+                    } flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      saveEditing();
+                    }}
+                  >
+                    <Check
+                      className={`${
+                        isMobileOrTabletView ? "h-2.5 w-2.5" : "h-3 w-3"
+                      }`}
+                    />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`${
+                      isMobileOrTabletView ? "h-5 w-5" : "h-6 w-6"
+                    } flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditing(item.id, item.name);
+                    }}
+                  >
+                    <Edit
+                      className={`${
+                        isMobileOrTabletView ? "h-2.5 w-2.5" : "h-3 w-3"
+                      }`}
+                    />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -676,7 +696,9 @@ export function NutrientTree({
   return (
     <div
       ref={formContainerRef}
-      className="h-full p-2 bg-white overflow-y-auto overflow-x-hidden"
+      className={`h-full p-2 bg-white ${
+        isMobile ? "overflow-hidden" : "overflow-y-auto overflow-x-hidden"
+      }`}
     >
       <style jsx global>
         {treeItemStyles}
@@ -711,7 +733,7 @@ export function NutrientTree({
         </div>
       </div>
 
-      {showScrollToBottom && (
+      {showScrollToBottom && !isMobile && (
         <button
           className="fixed bottom-3 right-3 bg-primary text-white rounded-full p-2 shadow-md hover:bg-primary/90 transition-opacity z-10"
           onClick={() => {

@@ -153,6 +153,19 @@ export default function NutritionTable() {
     }
   }, [useMobileLayout, sidebarOpen]);
 
+  // Also add an effect to handle the class when the sheet closes
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add("sheet-content-open");
+    } else {
+      document.body.classList.remove("sheet-content-open");
+    }
+
+    return () => {
+      document.body.classList.remove("sheet-content-open");
+    };
+  }, [sidebarOpen]);
+
   return (
     <div
       className={`${
@@ -172,7 +185,18 @@ export default function NutritionTable() {
           {currentView === "editor" && (
             <div className="flex items-center gap-2">
               {useMobileLayout && (
-                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <Sheet
+                  open={sidebarOpen}
+                  onOpenChange={(open) => {
+                    setSidebarOpen(open);
+                    // Add or remove class based on sheet state
+                    if (open) {
+                      document.body.classList.add("sheet-content-open");
+                    } else {
+                      document.body.classList.remove("sheet-content-open");
+                    }
+                  }}
+                >
                   <SheetTrigger asChild>
                     <Button variant="outline" size="icon" className="h-8 w-8">
                       <Menu className="h-4 w-4" />
@@ -180,7 +204,7 @@ export default function NutritionTable() {
                   </SheetTrigger>
                   <SheetContent
                     side="left"
-                    className="w-[85%] sm:w-[350px] p-0"
+                    className="w-[100%] sm:w-[350px] p-0 overflow-hidden"
                   >
                     <div className="h-full overflow-hidden">
                       <Tabs
@@ -208,19 +232,21 @@ export default function NutritionTable() {
                           value="nutrientes"
                           className="p-0 m-0 flex-1 overflow-hidden"
                         >
-                          <NutrientTree
-                            nutrients={nutrients}
-                            setNutrients={setNutrients}
-                            productName={productName}
-                            setProductName={setProductName}
-                            servings={servings}
-                            setServings={setServings}
-                            servingSize={servingSize}
-                            setServingSize={setServingSize}
-                            handleGoBack={handleGoBack}
-                            hideHeader={false}
-                            isMobile={useMobileLayout}
-                          />
+                          <div className="h-full overflow-hidden">
+                            <NutrientTree
+                              nutrients={nutrients}
+                              setNutrients={setNutrients}
+                              productName={productName}
+                              setProductName={setProductName}
+                              servings={servings}
+                              setServings={setServings}
+                              servingSize={servingSize}
+                              setServingSize={setServingSize}
+                              handleGoBack={() => setSidebarOpen(false)}
+                              hideHeader={false}
+                              isMobile={useMobileLayout}
+                            />
+                          </div>
                         </TabsContent>
 
                         <TabsContent
@@ -339,18 +365,20 @@ export default function NutritionTable() {
                         value="nutrientes"
                         className="p-0 m-0 flex-1 overflow-hidden"
                       >
-                        <NutrientTree
-                          nutrients={nutrients}
-                          setNutrients={setNutrients}
-                          productName={productName}
-                          setProductName={setProductName}
-                          servings={servings}
-                          setServings={setServings}
-                          servingSize={servingSize}
-                          setServingSize={setServingSize}
-                          handleGoBack={handleGoBack}
-                          hideHeader={false}
-                        />
+                        <div className="h-full overflow-hidden">
+                          <NutrientTree
+                            nutrients={nutrients}
+                            setNutrients={setNutrients}
+                            productName={productName}
+                            setProductName={setProductName}
+                            servings={servings}
+                            setServings={setServings}
+                            servingSize={servingSize}
+                            setServingSize={setServingSize}
+                            handleGoBack={handleGoBack}
+                            hideHeader={false}
+                          />
+                        </div>
                       </TabsContent>
 
                       <TabsContent

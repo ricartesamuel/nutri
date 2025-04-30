@@ -89,7 +89,7 @@ export function ValueInput({
 
   return (
     <div
-      className={`relative ${isMobile ? "w-16" : "w-24"}`}
+      className={`relative ${isMobile ? "w-20" : "w-24"}`}
       onClick={(e) => e.stopPropagation()}
     >
       <Input

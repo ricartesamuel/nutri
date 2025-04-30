@@ -246,3 +246,10 @@ body:has(.home-view-container) {
     overflow: hidden;
   }
 }
+
+/* Add this CSS to remove the scroll functionality on mobile when the editor is open */
+@media (max-width: 768px) {
+  .sheet-content-open {
+    overflow: hidden !important;
+  }
+}

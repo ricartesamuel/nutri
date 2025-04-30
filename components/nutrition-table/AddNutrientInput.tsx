@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface AddNutrientInputProps {
   onAddItem: (name: string) => void;
@@ -13,6 +14,7 @@ interface AddNutrientInputProps {
 
 export function AddNutrientInput({ onAddItem }: AddNutrientInputProps) {
   const [newItemName, setNewItemName] = useState("");
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
@@ -30,7 +32,9 @@ export function AddNutrientInput({ onAddItem }: AddNutrientInputProps) {
     <div className="mb-2">
       <div className="flex space-x-1">
         <Input
-          placeholder="Digite o nome do nutriente"
+          placeholder={
+            isMobile ? "Nome do nutriente" : "Digite o nome do nutriente"
+          }
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -39,11 +43,17 @@ export function AddNutrientInput({ onAddItem }: AddNutrientInputProps) {
         />
         <Button
           onClick={handleAddItem}
-          className="h-7 px-2 bg-primary hover:bg-primary/90 text-white"
+          className="h-7 bg-primary hover:bg-primary/90 text-white flex items-center justify-center"
           size="sm"
         >
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          <span className="text-xs">Adicionar</span>
+          {isMobile ? (
+            <Plus className="h-3.5 w-3.5" />
+          ) : (
+            <>
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              <span className="text-xs">Adicionar</span>
+            </>
+          )}
         </Button>
       </div>
     </div>
