@@ -202,12 +202,10 @@
   }
 }
 
-/* Configuração de overflow condicional */
 body {
   overflow: hidden;
 }
 
-/* Permitir rolagem na tela inicial */
 body:has(.home-view-container) {
   overflow: auto;
 }
@@ -216,21 +214,4 @@ body:has(.home-view-container) {
 .content-container {
   height: 100%;
   overflow: auto;
-}
-
-/* Adicione estas regras no final do arquivo */
-@media (max-width: 768px) {
-  .nutrient-indent-level-1,
-  .nutrient-indent-level-2 {
-    max-width: calc(100% - 24px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Ajuste para o componente NutrientTree em dispositivos móveis */
-  [data-sidebar="menu-item"] {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-  }
 }

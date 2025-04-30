@@ -243,7 +243,7 @@ export function NutrientTree({
   } | null>(null);
   const [activeValueId, setActiveValueId] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [isEditing, setIsEditing] = useState(isEditing);
+  const [isEditing, setIsEditing] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -608,11 +608,11 @@ export function NutrientTree({
               <div
                 className={`flex-1 truncate ${
                   isMobileOrTabletView ? "text-xs" : "text-sm"
-                } ${isMobileOrTabletView ? "max-w-[120px]" : "max-w-[180px]"}`}
+                } max-w-[180px]`}
               >
                 {item.name}
               </div>
-              <div className="flex items-center justify-end min-w-0 flex-shrink-0">
+              <div className="flex items-center justify-end">
                 <ValueInput
                   item={item}
                   updateItemValue={updateItemValue}
@@ -628,7 +628,7 @@ export function NutrientTree({
                 />
               </div>
               <div
-                className="flex items-center gap-1 justify-end flex-shrink-0"
+                className="flex items-center gap-1 justify-end"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Button
@@ -700,7 +700,7 @@ export function NutrientTree({
         <div className="border-primary/20 border rounded-sm p-2 relative">
           <AddNutrientInput onAddItem={handleAddItem} />
 
-          <div className="pr-1 overflow-x-hidden">
+          <div className="pr-1">
             <SortableTree
               items={items}
               onItemsChanged={handleItemsChanged}
