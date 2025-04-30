@@ -155,3 +155,60 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--secondary) / 0.9);
 }
+
+/* mobile experience */
+@layer utilities {
+  .dnd-sortable-tree-handle {
+    opacity: 0.6 !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 8px !important;
+    cursor: grab !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .dnd-sortable-tree-handle:hover {
+    opacity: 1 !important;
+  }
+
+  .dnd-sortable-tree-collapse-button {
+    opacity: 0.6 !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .dnd-sortable-tree-collapse-button:hover {
+    opacity: 1 !important;
+  }
+
+  @media (max-width: 768px) {
+    .dnd-sortable-tree-handle {
+      width: 14px !important;
+      height: 14px !important;
+      margin-right: 4px !important;
+    }
+
+    .dnd-sortable-tree-collapse-button {
+      width: 14px !important;
+      height: 14px !important;
+      margin-right: 2px !important;
+    }
+  }
+}
+
+/* prevent scrolling in fullscreen app */
+body {
+  overflow: hidden;
+}
+
+/* scroll-fix */
+.content-container {
+  height: 100%;
+  overflow: auto;
+}

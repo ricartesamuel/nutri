@@ -1,6 +1,6 @@
 import type { NutrientRow } from "@/components/types/nutrition";
 
-// Update the dailyValues object to ensure it matches the nutrient names exactly
+// update the dailyValues object to ensure it matches the nutrient names exactly
 
 export const dailyValues = {
   "Valor energético (kcal)": 2000,
@@ -34,39 +34,50 @@ export const getParentNutrient = (nutrientName: string): string | null => {
   return null;
 };
 
+// Enhance the getIndentationLevel function to better detect sub-nutrients
 export const getIndentationLevel = (nutrientName: string): number => {
-  // Normalize the nutrient name for comparison
+  // normalize the nutrient name for comparison
   const normalizedName = nutrientName.toLowerCase().trim();
 
-  // Check if it's a direct child of Carboidratos
-  if (normalizedName.includes("carboidrato")) {
+  // check if it's a direct child of Carboidratos
+  if (
+    normalizedName.includes("carboidrato") &&
+    !normalizedName.includes("fibra")
+  ) {
     return 0;
   }
 
-  // Check if it's Açúcares totais
-  if (normalizedName.includes("açúcares totais")) {
+  // check if it's Açúcares totais
+  if (
+    normalizedName.includes("açúcares totais") ||
+    normalizedName.includes("acucares totais")
+  ) {
     return 1;
   }
 
-  // Check if it's Açúcares adicionados (child of Açúcares totais)
-  if (normalizedName.includes("açúcares adicionados")) {
+  // check if it's Açúcares adicionados (child of Açúcares totais)
+  if (
+    normalizedName.includes("açúcares adicionados") ||
+    normalizedName.includes("acucares adicionados")
+  ) {
     return 2;
   }
 
-  // Check if it's Gorduras totais
+  // check if it's Gorduras totais
   if (normalizedName.includes("gorduras totais")) {
     return 0;
   }
 
-  // Check if it's a child of Gorduras totais
+  // check if it's a child of Gorduras totais
   if (
-    normalizedName.includes("gordura") &&
+    (normalizedName.includes("gordura") ||
+      normalizedName.includes("gorduras")) &&
     !normalizedName.includes("totais")
   ) {
     return 1;
   }
 
-  // Default case - no indentation
+  // default case - no indentation
   return 0;
 };
 
@@ -87,11 +98,11 @@ export const calculateVD = (
   servingSize: string,
   nutrients: NutrientRow[]
 ) => {
-  // Clean up the nutrient name to match the keys in dailyValues
+  // clean nutrient name to match the keys in dailyValues
   const cleanName =
     nutrientName.split("(")[0].trim() + " (" + nutrientName.split("(")[1];
 
-  // Skip calculation for certain nutrients
+  // skip calculation for certain nutrients
   if (
     cleanName === "Açúcares totais (g)" ||
     cleanName === "Gorduras trans (g)" ||
@@ -101,7 +112,7 @@ export const calculateVD = (
   )
     return "-";
 
-  // Get the daily value for this nutrient
+  // get VD
   const dailyValue = dailyValues[cleanName as keyof typeof dailyValues];
   if (!dailyValue) return "-";
 
@@ -111,13 +122,13 @@ export const calculateVD = (
 
   if (isNaN(numericValue) || isNaN(numericServingSize)) return "-";
 
-  // Calculate the value per serving and the percentage of daily value
+  // calculate the value per serving and the percentage of daily value
   const valuePerServing = (numericValue * numericServingSize) / 100;
   const vd = (valuePerServing / dailyValue) * 100;
 
   // Round and format the result
   const roundedVD = Math.round(vd);
-  return isNaN(roundedVD) ? "-" : `${roundedVD}%`;
+  return isNaN(roundedVD) ? "-" : `${roundedVD}`;
 };
 
 export const formatValue = (value: number) => {

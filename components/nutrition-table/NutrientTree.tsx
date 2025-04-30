@@ -64,6 +64,7 @@ interface NutrientTreeProps {
   setServingSize: (size: string) => void;
   handleGoBack: () => void;
   hideHeader?: boolean;
+  isMobile?: boolean;
 }
 
 export function NutrientTree({
@@ -77,6 +78,7 @@ export function NutrientTree({
   setServingSize,
   handleGoBack,
   hideHeader = false,
+  isMobile = false,
 }: NutrientTreeProps) {
   // convert flat nutrients to tree structure
   const convertToTreeItems = (
@@ -241,6 +243,7 @@ export function NutrientTree({
   } | null>(null);
   const [activeValueId, setActiveValueId] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -384,7 +387,7 @@ export function NutrientTree({
       name: newItemName.trim(),
       value: "",
       unit: unit,
-      collapsed: true, // Default to collapsed
+      collapsed: true, // default
     };
 
     // add new element
@@ -403,11 +406,13 @@ export function NutrientTree({
   const startEditing = (id: string, name: string) => {
     setEditingItemId(id);
     setEditingItemName(name);
+    setIsEditing(true);
   };
 
   const saveEditing = () => {
     if (!editingItemId || !editingItemName.trim()) {
       setEditingItemId(null);
+      setIsEditing(false);
       return;
     }
 
@@ -442,6 +447,7 @@ export function NutrientTree({
     const updatedItems = updateItemName(items);
     setItems(updatedItems);
     setEditingItemId(null);
+    setIsEditing(false);
 
     isInternalUpdate.current = true;
     const flatNutrients = convertToFlatNutrients(updatedItems);
@@ -451,6 +457,7 @@ export function NutrientTree({
 
   const cancelEditing = () => {
     setEditingItemId(null);
+    setIsEditing(false);
   };
 
   const updateItemValue = (id: string, value: string) => {
@@ -564,7 +571,7 @@ export function NutrientTree({
     TreeItemComponentProps<NutrientTreeItemData>
   >((props, ref) => {
     const { item, depth } = props;
-    const isEditing = editingItemId === item.id;
+    const isMobileOrTabletView = isMobile || false;
 
     return (
       <SimpleTreeItemWrapper
@@ -572,10 +579,14 @@ export function NutrientTree({
         ref={ref}
         collapsed={item.collapsed}
         className="hover:bg-primary/5 rounded-sm"
-        childrenClassName="pl-6"
+        childrenClassName={isMobileOrTabletView ? "pl-4" : "pl-6"}
         showDragHandle={true}
       >
-        <div className="py-1 group my-1 px-1">
+        <div
+          className={`py-1 group ${
+            isMobileOrTabletView ? "my-0.5" : "my-1"
+          } px-1`}
+        >
           {isEditing ? (
             <div className="flex-1 flex items-center">
               <input
@@ -589,11 +600,18 @@ export function NutrientTree({
                 onBlur={saveEditing}
                 className="h-8 border-primary/20 focus-visible:ring-primary/20 w-full rounded-md border px-2 py-1 text-sm"
                 autoFocus
+                maxLength={30}
               />
             </div>
           ) : (
             <div className="flex items-center w-full gap-1">
-              <div className="flex-1 truncate text-sm">{item.name}</div>
+              <div
+                className={`flex-1 truncate ${
+                  isMobileOrTabletView ? "text-xs" : "text-sm"
+                } max-w-[180px]`}
+              >
+                {item.name}
+              </div>
               <div className="flex items-center justify-end">
                 <ValueInput
                   item={item}
@@ -606,6 +624,7 @@ export function NutrientTree({
                       setActiveValueId(null);
                     }
                   }}
+                  isMobile={isMobileOrTabletView}
                 />
               </div>
               <div
@@ -615,24 +634,36 @@ export function NutrientTree({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10"
+                  className={`${
+                    isMobileOrTabletView ? "h-5 w-5" : "h-6 w-6"
+                  } flex-shrink-0 text-primary/40 hover:text-primary hover:bg-primary/10`}
                   onClick={(e) => {
                     e.stopPropagation();
                     startEditing(item.id, item.name);
                   }}
                 >
-                  <Edit className="h-3 w-3" />
+                  <Edit
+                    className={`${
+                      isMobileOrTabletView ? "h-2.5 w-2.5" : "h-3 w-3"
+                    }`}
+                  />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-primary/40 flex-shrink-0 hover:bg-primary/10 hover:text-primary"
+                  className={`${
+                    isMobileOrTabletView ? "h-5 w-5" : "h-6 w-6"
+                  } text-primary/40 flex-shrink-0 hover:bg-primary/10 hover:text-primary`}
                   onClick={(e) => {
                     e.stopPropagation();
                     openDeleteDialog(item.id);
                   }}
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2
+                    className={`${
+                      isMobileOrTabletView ? "h-2.5 w-2.5" : "h-3 w-3"
+                    }`}
+                  />
                 </Button>
               </div>
             </div>

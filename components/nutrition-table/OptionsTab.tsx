@@ -45,7 +45,7 @@ export default function OptionsTab({
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 h-full overflow-y-auto">
       {/* Dimensões da tabela */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground">

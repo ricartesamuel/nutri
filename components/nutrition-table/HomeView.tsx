@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface HomeViewProps {
   onSelectTable: (productName: string) => void;
@@ -15,8 +16,10 @@ export default function HomeView({ onSelectTable }: HomeViewProps) {
     "Suco de Laranja",
   ];
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   return (
-    <div className="max-w-4xl mx-auto mt-8 space-y-8">
+    <div className="max-w-4xl mx-auto mt-8 px-4 md:px-0 space-y-8">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-3 bg-clip-text text-blue-200 nutri-brand-gradient"></h1>
         <p className="text-muted-foreground">

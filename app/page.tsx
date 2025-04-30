@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HomeView from "@/components/nutrition-table/HomeView";
 import { NutrientTree } from "@/components/nutrition-table/NutrientTree";
 import NutritionTablePreview from "@/components/nutrition-table/TablePreview";
 import OptionsTab from "@/components/nutrition-table/OptionsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Menu, Printer } from "lucide-react";
 import type { NutrientRow } from "@/components/types/nutrition.ts";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { PrintButton } from "@/components/ui/print-button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  useMediaQuery,
+  useIsMobileOrTablet,
+  useIsDevelopment,
+} from "@/hooks/use-media-query";
 
 type View = "home" | "editor";
 
@@ -60,6 +64,21 @@ export default function NutritionTable() {
   const [width, setWidth] = useState(60);
   const [height, setHeight] = useState(60);
   const [activeTab, setActiveTab] = useState("nutrientes");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Detecta se estamos em modo de desenvolvimento
+  const isDevelopment = useIsDevelopment();
+
+  // Detecta se é um dispositivo móvel/tablet
+  const isMobileOrTablet = useIsMobileOrTablet();
+
+  // Detecta se a tela é pequena (para layout responsivo)
+  const isSmallScreen = useMediaQuery("(max-width: 1180px)");
+
+  // Em desenvolvimento, usamos o tamanho da tela para permitir testes
+  // Em produção, usamos a detecção de dispositivo
+  const useMobileLayout = isDevelopment ? isSmallScreen : isMobileOrTablet;
 
   const handleGoBack = () => {
     setCurrentView("home");
@@ -70,61 +89,77 @@ export default function NutritionTable() {
     setCurrentView("editor");
   };
 
-  const handleExportToPDF = () => {
-    // Create a hidden clone of the table without scaling for export
-    const originalCard = document.querySelector(
-      ".nutrition-card"
-    ) as HTMLElement;
-    if (!originalCard) return;
+  const handleExportToPDF = async () => {
+    try {
+      setIsExporting(true);
 
-    const clone = originalCard.cloneNode(true) as HTMLElement;
-    clone.style.transform = "none";
-    clone.style.position = "absolute";
-    clone.style.left = "-9999px";
-    clone.style.top = "-9999px";
+      // get table element
+      const tableElement = document.querySelector(".nutrition-card");
 
-    // Ensure the border is visible in the clone
-    clone.style.border = "1px solid black";
+      if (!tableElement) {
+        console.error("Table element not found");
+        setIsExporting(false);
+        return;
+      }
 
-    document.body.appendChild(clone);
+      // get the HTML content of the table
+      const htmlContent = tableElement.outerHTML;
 
-    html2canvas(clone, {
-      scale: 3,
-      logging: true,
-    }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
+      console.log("Sending HTML to API endpoint...");
 
-      // Base dimensions
-      const baseWidth = 50; // mm
-      const baseHeight = 60; // mm
+      // call API endpoint
+      const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ htmlContent }),
+      });
 
-      // Calculate additional height based on number of nutrients
-      const baseNutrientCount = 10;
-      const extraHeightPerNutrient = 5; // mm per extra nutrient
-      const extraHeight =
-        Math.max(0, nutrients.length - baseNutrientCount) *
-        extraHeightPerNutrient;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Server response: ${errorText}`);
+        throw new Error(
+          `Failed to generate PDF: ${response.status} ${response.statusText}`
+        );
+      }
 
-      // Final dimensions for PDF
-      const pdfWidth = baseWidth;
-      const pdfHeight = baseHeight + extraHeight;
+      console.log("PDF generated successfully, downloading...");
 
-      const pdf = new jsPDF("p", "mm", [pdfWidth, pdfHeight]);
+      // PDF blob
+      const pdfBlob = await response.blob();
 
-      // Maintain aspect ratio when adding image to PDF
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      if (pdfBlob.size === 0) {
+        throw new Error("Generated PDF is empty");
+      }
 
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save("tabela_nutricional.pdf");
+      // download link
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tabela_nutricional.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
-      // Remove the clone after export
-      document.body.removeChild(clone);
-    });
+      setIsExporting(false);
+    } catch (error) {
+      console.error("Error in export process:", error);
+      alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+      setIsExporting(false);
+    }
   };
 
+  // close sidebar when switching to desktop
+  useEffect(() => {
+    if (!useMobileLayout && sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [useMobileLayout, sidebarOpen]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-secondary/5 to-brand-primary/5">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-brand-secondary/5 to-brand-primary/5">
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-2 w-full">
           <div className="flex items-center">
@@ -137,14 +172,112 @@ export default function NutritionTable() {
           </div>
           {currentView === "editor" && (
             <div className="flex items-center gap-2">
-              <PrintButton />
-              <Button
-                className="bg-primary hover:bg-primary/90 text-white"
-                onClick={handleExportToPDF}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              {useMobileLayout && (
+                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Menu className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="left"
+                    className="w-[85%] sm:w-[350px] p-0"
+                  >
+                    <div className="h-full overflow-hidden">
+                      <Tabs
+                        defaultValue="nutrientes"
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full h-full flex flex-col"
+                      >
+                        <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-primary/10 sticky top-0 bg-white z-10">
+                          <TabsTrigger
+                            value="nutrientes"
+                            className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                          >
+                            Nutrientes
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="aba2"
+                            className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                          >
+                            Opções
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent
+                          value="nutrientes"
+                          className="p-0 m-0 flex-1 overflow-hidden"
+                        >
+                          <NutrientTree
+                            nutrients={nutrients}
+                            setNutrients={setNutrients}
+                            productName={productName}
+                            setProductName={setProductName}
+                            servings={servings}
+                            setServings={setServings}
+                            servingSize={servingSize}
+                            setServingSize={setServingSize}
+                            handleGoBack={handleGoBack}
+                            hideHeader={false}
+                            isMobile={useMobileLayout}
+                          />
+                        </TabsContent>
+
+                        <TabsContent
+                          value="aba2"
+                          className="p-0 m-0 flex-1 overflow-auto"
+                        >
+                          <OptionsTab
+                            columns={columns}
+                            setColumns={setColumns}
+                            width={width}
+                            setWidth={setWidth}
+                            height={height}
+                            setHeight={setHeight}
+                            servingSize={servingSize}
+                            setServingSize={setServingSize}
+                            servings={servings}
+                            setServings={setServings}
+                          />
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+              {useMobileLayout ? (
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => window.print()}
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 bg-primary hover:bg-primary/90"
+                    onClick={handleExportToPDF}
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <PrintButton />
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-white"
+                    onClick={handleExportToPDF}
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -155,85 +288,109 @@ export default function NutritionTable() {
         ) : (
           <div className="bg-white rounded-lg shadow-sm border border-primary/10 overflow-hidden">
             <div className="flex flex-col h-full">
-              <div className="grid lg:grid-cols-[480px,1fr] h-[calc(100vh-56px)]">
-                <div className="border-r border-primary/10 pl-0 overflow-hidden">
-                  <Tabs
-                    defaultValue="nutrientes"
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-full h-full flex flex-col"
-                  >
-                    <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-primary/10 sticky top-0 bg-white z-10">
-                      <TabsTrigger
-                        value="nutrientes"
-                        className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
-                      >
-                        Nutrientes
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="aba2"
-                        className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
-                      >
-                        Opções
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent
-                      value="nutrientes"
-                      className="p-0 m-0 flex-1 overflow-hidden"
-                    >
-                      <NutrientTree
-                        nutrients={nutrients}
-                        setNutrients={setNutrients}
+              {useMobileLayout ? (
+                // mobile and tablet layout
+                <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
+                  <div className="flex-1 flex items-center justify-center bg-[#f8f9fa] bg-opacity-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden">
+                    <div className="fixed-position">
+                      <NutritionTablePreview
                         productName={productName}
-                        setProductName={setProductName}
                         servings={servings}
-                        setServings={setServings}
                         servingSize={servingSize}
-                        setServingSize={setServingSize}
-                        handleGoBack={handleGoBack}
-                        hideHeader={false}
-                      />
-                    </TabsContent>
-
-                    <TabsContent
-                      value="aba2"
-                      className="p-0 m-0 flex-1 overflow-auto"
-                    >
-                      <OptionsTab
+                        nutrients={nutrients}
                         columns={columns}
                         setColumns={setColumns}
                         width={width}
                         setWidth={setWidth}
                         height={height}
                         setHeight={setHeight}
-                        servingSize={servingSize}
-                        setServingSize={setServingSize}
-                        servings={servings}
-                        setServings={setServings}
+                        hideSettings={true}
                       />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-
-                <div className="flex items-center justify-center w-full h-full bg-[#f8f9fa] bg-opacity-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden">
-                  <div className="flex items-center justify-center w-full h-full">
-                    <NutritionTablePreview
-                      productName={productName}
-                      servings={servings}
-                      servingSize={servingSize}
-                      nutrients={nutrients}
-                      columns={columns}
-                      setColumns={setColumns}
-                      width={width}
-                      setWidth={setWidth}
-                      height={height}
-                      setHeight={setHeight}
-                      hideSettings={true}
-                    />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                // desktop layout
+                <div className="grid grid-cols-[480px,1fr] h-[calc(100vh-56px)] overflow-hidden">
+                  <div className="border-r border-primary/10 pl-0 overflow-hidden">
+                    <Tabs
+                      defaultValue="nutrientes"
+                      value={activeTab}
+                      onValueChange={setActiveTab}
+                      className="w-full h-full flex flex-col"
+                    >
+                      <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-primary/10 sticky top-0 bg-white z-10">
+                        <TabsTrigger
+                          value="nutrientes"
+                          className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                        >
+                          Nutrientes
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="aba2"
+                          className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                        >
+                          Opções
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent
+                        value="nutrientes"
+                        className="p-0 m-0 flex-1 overflow-hidden"
+                      >
+                        <NutrientTree
+                          nutrients={nutrients}
+                          setNutrients={setNutrients}
+                          productName={productName}
+                          setProductName={setProductName}
+                          servings={servings}
+                          setServings={setServings}
+                          servingSize={servingSize}
+                          setServingSize={setServingSize}
+                          handleGoBack={handleGoBack}
+                          hideHeader={false}
+                        />
+                      </TabsContent>
+
+                      <TabsContent
+                        value="aba2"
+                        className="p-0 m-0 flex-1 overflow-auto"
+                      >
+                        <OptionsTab
+                          columns={columns}
+                          setColumns={setColumns}
+                          width={width}
+                          setWidth={setWidth}
+                          height={height}
+                          setHeight={setHeight}
+                          servingSize={servingSize}
+                          setServingSize={setServingSize}
+                          servings={servings}
+                          setServings={setServings}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+
+                  <div className="flex items-center justify-center w-full h-full bg-[#ffffff] bg-opacity-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] p-4">
+                    <div className="fixed-position">
+                      <NutritionTablePreview
+                        productName={productName}
+                        servings={servings}
+                        servingSize={servingSize}
+                        nutrients={nutrients}
+                        columns={columns}
+                        setColumns={setColumns}
+                        width={width}
+                        setWidth={setWidth}
+                        height={height}
+                        setHeight={setHeight}
+                        hideSettings={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

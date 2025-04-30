@@ -35,6 +35,7 @@ export function AddNutrientInput({ onAddItem }: AddNutrientInputProps) {
           onChange={(e) => setNewItemName(e.target.value)}
           onKeyDown={handleKeyDown}
           className="h-7 text-sm border-primary/20 focus-visible:ring-primary/20"
+          maxLength={30}
         />
         <Button
           onClick={handleAddItem}

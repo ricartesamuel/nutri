@@ -14,6 +14,7 @@ interface ValueInputProps {
   updateItemValue: (id: string, value: string) => void;
   isActive: boolean;
   setActive: (active: boolean) => void;
+  isMobile?: boolean;
 }
 
 export function ValueInput({
@@ -21,6 +22,7 @@ export function ValueInput({
   updateItemValue,
   isActive,
   setActive,
+  isMobile = false,
 }: ValueInputProps) {
   const [localValue, setLocalValue] = useState(item.value || "");
   const [displayValue, setDisplayValue] = useState(
@@ -86,7 +88,10 @@ export function ValueInput({
   };
 
   return (
-    <div className="relative w-24" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`relative ${isMobile ? "w-16" : "w-24"}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <Input
         ref={valueInputRef}
         type="text"
@@ -97,13 +102,19 @@ export function ValueInput({
         onClick={handleValueClick}
         onFocus={() => setActive(true)}
         onKeyDown={handleKeyDown}
-        className={`h-7 w-full pl-2 pr-8 text-sm border-primary/20 focus-visible:ring-primary/20 ${
+        className={`${
+          isMobile ? "h-6 text-xs" : "h-7 text-sm"
+        } w-full pl-2 pr-8 border-primary/20 focus-visible:ring-primary/20 ${
           isValid ? "" : "border-red-500"
         }`}
         inputMode="decimal"
         maxLength={5}
       />
-      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-primary/60 pointer-events-none">
+      <span
+        className={`absolute right-2 top-1/2 -translate-y-1/2 ${
+          isMobile ? "text-[10px]" : "text-xs"
+        } text-primary/60 pointer-events-none`}
+      >
         {item.unit}
       </span>
     </div>
