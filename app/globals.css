@@ -202,9 +202,12 @@
   }
 }
 
-/* prevent scrolling in fullscreen app */
 body {
   overflow: hidden;
+}
+
+body:has(.home-view-container) {
+  overflow: auto;
 }
 
 /* scroll-fix */

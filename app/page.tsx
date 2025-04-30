@@ -284,7 +284,9 @@ export default function NutritionTable() {
       </div>
       <div className="mx-auto py-0">
         {currentView === "home" ? (
-          <HomeView onSelectTable={handleSelectTable} />
+          <div className="min-h-[calc(100vh-56px)]">
+            <HomeView onSelectTable={handleSelectTable} />
+          </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm border border-primary/10 overflow-hidden">
             <div className="flex flex-col h-full">
