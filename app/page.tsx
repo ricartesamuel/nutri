@@ -67,17 +67,12 @@ export default function NutritionTable() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Detecta se estamos em modo de desenvolvimento
   const isDevelopment = useIsDevelopment();
 
-  // Detecta se é um dispositivo móvel/tablet
   const isMobileOrTablet = useIsMobileOrTablet();
 
-  // Detecta se a tela é pequena (para layout responsivo)
   const isSmallScreen = useMediaQuery("(max-width: 1180px)");
 
-  // Em desenvolvimento, usamos o tamanho da tela para permitir testes
-  // Em produção, usamos a detecção de dispositivo
   const useMobileLayout = isDevelopment ? isSmallScreen : isMobileOrTablet;
 
   const handleGoBack = () => {
@@ -159,7 +154,11 @@ export default function NutritionTable() {
   }, [useMobileLayout, sidebarOpen]);
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-brand-secondary/5 to-brand-primary/5">
+    <div
+      className={`${
+        currentView === "home" ? "min-h-screen" : "h-screen overflow-hidden"
+      } bg-gradient-to-br from-brand-secondary/5 to-brand-primary/5`}
+    >
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-2 w-full">
           <div className="flex items-center">
