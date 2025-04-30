@@ -19,8 +19,8 @@
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/psleo/nutri.git
-
+   git clone https://github.com/ricartesamuel/nutri.git
+   ```
 
 📄 Licença
-   Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
